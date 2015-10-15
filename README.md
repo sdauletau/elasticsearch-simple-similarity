@@ -1,5 +1,4 @@
-# elasticsearch-simple-similarity
-Elasticsearch simple similarity plugin
+# Elasticsearch simple similarity plugin
 
 ./scripts/install-plugin.sh
 
