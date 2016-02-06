@@ -17,7 +17,6 @@
 
     <name>elasticsearch-simple-similarity</name>
     <artifactId>elasticsearch-simple-similarity</artifactId>
-    <version>${parent.version}</version>
     <description>Provides simplified similarity based on matching a term or a phrase.</description>
     
     <licenses>
