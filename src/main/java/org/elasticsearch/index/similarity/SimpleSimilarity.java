@@ -22,7 +22,6 @@ import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
 import java.io.IOException;
@@ -49,11 +48,11 @@ public class SimpleSimilarity extends Similarity {
     }
 
     @Override
-    public final SimWeight computeWeight(float queryBoost, CollectionStatistics collectionStats, TermStatistics... termStats) {
+    public final SimWeight computeWeight(CollectionStatistics collectionStats, TermStatistics... termStats) {
         final Explanation idf = termStats.length == 1
                 ? idfExplain(collectionStats, termStats[0])
                 : idfExplain(collectionStats, termStats);
-        return new IDFStats(idf, queryBoost);
+        return new IDFStats(idf);
     }
 
     @Override
@@ -104,7 +103,7 @@ public class SimpleSimilarity extends Similarity {
 
         SimpleTFIDFSimScorer(IDFStats stats) throws IOException {
             this.stats = stats;
-            this.weightValue = stats.value;
+            this.weightValue = stats.boost;
         }
 
         @Override
@@ -130,12 +129,10 @@ public class SimpleSimilarity extends Similarity {
 
     private static class IDFStats extends SimWeight {
         private final Explanation idf;
-        private final float queryBoost;
-        private float value;
+        private float boost;
 
-        public IDFStats(Explanation idf, float queryBoost) {
+        public IDFStats(Explanation idf) {
             this.idf = idf;
-            this.queryBoost = queryBoost;
         }
 
         /** The value for normalization of contained query clauses (e.g. sum of squared weights).
@@ -146,9 +143,8 @@ public class SimpleSimilarity extends Similarity {
          */
         @Override
         public float getValueForNormalization() {
-            Loggers.getLogger(getClass()).debug("\n getValueForNormalization called \n");
-
-            return queryBoost * queryBoost;
+            // do not use any query normalization
+            return 1.0f;
         }
 
         /** Assigns the query normalization factor and boost from parent queries to this.
@@ -158,18 +154,16 @@ public class SimpleSimilarity extends Similarity {
          * the topLevelBoost (e.g. from an outer BooleanQuery) into its score.
          */
         @Override
-        public void normalize(float queryNorm, float topLevelBoost) {
-            Loggers.getLogger(getClass()).debug("\n normalize called \n");
-
-            value = queryBoost * topLevelBoost * idf.getValue();
+        public void normalize(float queryNorm, float boost) {
+            this.boost = boost;
         }
     }
 
     private Explanation explainQuery(IDFStats stats) {
         List<Explanation> explanations = new ArrayList<>();
 
-        Explanation boostExpl = Explanation.match(stats.queryBoost, "boost");
-        if (stats.queryBoost != 1.0f)
+        Explanation boostExpl = Explanation.match(stats.boost, "boost");
+        if (stats.boost != 1.0f)
             explanations.add(boostExpl);
         explanations.add(stats.idf);
 
