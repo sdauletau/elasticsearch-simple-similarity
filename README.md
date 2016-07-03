@@ -6,7 +6,11 @@
   
 # Elasticsearch "ignore tf-idf" plugin
 
-## Installation
+## Build
+
+mvn clean package
+
+## Install
 
 ./scripts/install-plugin.sh
 
