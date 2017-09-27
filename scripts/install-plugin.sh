@@ -1,3 +1,4 @@
 #!/bin/sh
 
-/usr/local/opt/elasticsearch-2.4.4/bin/plugin install file:./target/releases/elasticsearch-simple-similarity-2.4.4.zip
+/usr/local/opt/elasticsearch-6.0.0-beta2/bin/elasticsearch-plugin install file:///`pwd`/build/distributions/elasticsearch-simple-similarity-6.0.0-beta2.zip
+

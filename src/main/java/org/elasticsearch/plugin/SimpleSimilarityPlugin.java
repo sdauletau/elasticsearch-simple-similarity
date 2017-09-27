@@ -14,22 +14,20 @@
 
 package org.elasticsearch.plugin;
 
-import org.elasticsearch.index.similarity.SimilarityModule;
+import org.elasticsearch.index.IndexModule;
 import org.elasticsearch.index.similarity.SimpleSimilarityProvider;
 import org.elasticsearch.plugins.Plugin;
 
 public class SimpleSimilarityPlugin extends Plugin {
-    @Override
     public String name() {
-        return "simple-similarity";
+        return "elasticsearch-simple-similarity";
     }
 
-    @Override
     public String description() {
-        return "simple-similarity plugin";
+        return "Elasticsearch plugin that ignores tf-idf.";
     }
 
-    public void onModule(SimilarityModule module) {
-        module.addSimilarity("simple-similarity", SimpleSimilarityProvider.class);
+    public void onIndexModule(IndexModule indexModule) {
+        indexModule.addSimilarity("simple-similarity", SimpleSimilarityProvider::new);
     }
 }

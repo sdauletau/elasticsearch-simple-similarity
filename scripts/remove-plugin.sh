@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/usr/local/opt/elasticsearch-2.4.4/bin/plugin remove elasticsearch-simple-similarity
+/usr/local/opt/elasticsearch-6.0.0-beta2/bin/elasticsearch-plugin remove elasticsearch-simple-similarity

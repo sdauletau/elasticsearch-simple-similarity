@@ -1,17 +1,22 @@
 #!/bin/sh
 
 echo &&
-curl -s -XDELETE "http://localhost:9200/test"
+curl --header "Content-Type:application/json" -s -XDELETE "http://localhost:9200/test"
 
 echo &&
-curl -s -XPUT "http://localhost:9200/test" -d '{
+curl --header "Content-Type:application/json" -s -XPUT "http://localhost:9200/test" -d '{
   "settings": {
    "index": {
      "number_of_shards": 1,
-     "number_of_replicas": 0
+     "number_of_replicas": 0,
+     "similarity": {
+       "default": {
+         "type": "classic"
+       }
+     }
    },
-   "similarity": {
-     "simpleSimilarity": {
+   "similarity" : {
+    "simpleSimilarity": {
        "type": "simple-similarity"
      }
    }
@@ -19,29 +24,29 @@ curl -s -XPUT "http://localhost:9200/test" -d '{
 }'
 
 echo &&
-curl -XPUT 'localhost:9200/test/type1/_mapping' -d '{
+curl --header "Content-Type:application/json" -XPUT 'localhost:9200/test/type1/_mapping' -d '{
  "type1": {
    "properties": {
      "simpleName": {
-       "type": "string",
+       "type": "text",
        "similarity": "simpleSimilarity"
      },
      "name": {
-       "type": "string"
+       "type": "text"
      }
    }
  }
 }'
 
-echo && curl -s -XPUT "localhost:9200/test/type1/1" -d '{"name" : "foo bar baz", "simpleName" : "foo bar baz"}' && echo
-echo && curl -s -XPUT "localhost:9200/test/type1/2" -d '{"name" : "foo foo foo", "simpleName" : "foo foo foo"}' && echo
-echo && curl -s -XPUT "localhost:9200/test/type1/3" -d '{"name" : "bar baz", "simpleName" : "bar baz"}' && echo
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/1" -d '{"name" : "foo bar baz", "simpleName" : "foo bar baz"}' && echo
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/2" -d '{"name" : "foo foo foo", "simpleName" : "foo foo foo"}' && echo
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/3" -d '{"name" : "bar baz", "simpleName" : "bar baz"}' && echo
 
-echo && curl -s -XPOST "http://localhost:9200/test/_refresh" && echo
+echo && curl --header "Content-Type:application/json" -s -XPOST "http://localhost:9200/test/_refresh" && echo
 
 echo &&
 echo 'expecting different score' &&
-curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
+curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
  "query": {
    "match": {
      "name": "foo"
@@ -51,7 +56,7 @@ curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
 
 echo &&
 echo 'expecting the same score' &&
-curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
+curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
   "explain": false,
   "query": {
     "match": {
@@ -62,7 +67,7 @@ curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
 
 echo &&
 echo 'expecting different score' &&
-curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
+curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
  "query": {
    "match": {
      "name": "bar"
@@ -72,8 +77,8 @@ curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
 
 echo &&
 echo 'expecting the same score' &&
-curl -s "localhost:9200/test/type1/_search?pretty=true" -d '{
-  "explain": false,
+curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
+  "explain": true,
   "query": {
     "match": {
       "simpleName": "bar"

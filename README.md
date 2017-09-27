@@ -8,7 +8,7 @@
 
 ## Build
 
-mvn clean package
+gradle clean assemble
 
 ## Install
 

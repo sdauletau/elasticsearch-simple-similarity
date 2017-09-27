@@ -21,70 +21,57 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.settings.Settings;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleSimilarity extends Similarity {
-    protected final Settings settings;
 
-    @Inject
-    public SimpleSimilarity(Settings settings) {
-        this.settings = settings;
+    public SimpleSimilarity() {
     }
 
-    @Override
-    public String toString() {
-        return "SimpleSimilarity";
-    }
-
-    @Override
     public long computeNorm(FieldInvertState fieldInvertState) {
         // ignore field boost and length during indexing
         return 1;
     }
 
-    @Override
-    public final SimWeight computeWeight(CollectionStatistics collectionStats, TermStatistics... termStats) {
+    public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
         final Explanation idf = termStats.length == 1
                 ? idfExplain(collectionStats, termStats[0])
                 : idfExplain(collectionStats, termStats);
         return new IDFStats(idf);
     }
 
-    @Override
     public final SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
         IDFStats idfstats = (IDFStats) stats;
         return new SimpleTFIDFSimScorer(idfstats);
     }
 
-    public float sloppyFreq(int distance) {
+    private float sloppyFreq(int distance) {
         return 1.0f / (distance + 1);
     }
 
-    public float scorePayload(int doc, int start, int end, BytesRef payload) {
+    private float scorePayload(int doc, int start, int end, BytesRef payload) {
         return 1.0f;
     }
 
-    public float tf(float freq) {
+    private float tf(float freq) {
         return 1.0f;
     }
 
-    public float idf(long docFreq, long numDocs) {
+    private float idf(long docFreq, long numDocs) {
         return 1.0f;
     }
 
-    public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
+    private Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats) {
         final long df = termStats.docFreq();
         final long max = collectionStats.maxDoc();
         final float idf = idf(df, max);
         return Explanation.match(idf, "idf(docFreq=" + df + ", maxDocs=" + max + ")");
     }
 
-    public Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats[]) {
+    private Explanation idfExplain(CollectionStatistics collectionStats, TermStatistics termStats[]) {
         final long max = collectionStats.maxDoc();
         float idf = 0.0f;
         List<Explanation> subs = new ArrayList<>();
@@ -106,22 +93,18 @@ public class SimpleSimilarity extends Similarity {
             this.weightValue = stats.boost;
         }
 
-        @Override
         public float score(int doc, float freq) {
             return tf(freq) * weightValue;
         }
 
-        @Override
         public float computeSlopFactor(int distance) {
             return sloppyFreq(distance);
         }
 
-        @Override
         public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
             return scorePayload(doc, start, end, payload);
         }
 
-        @Override
         public Explanation explain(int doc, Explanation freq) {
             return explainScore(doc, freq, stats);
         }
@@ -131,7 +114,7 @@ public class SimpleSimilarity extends Similarity {
         private final Explanation idf;
         private float boost;
 
-        public IDFStats(Explanation idf) {
+        IDFStats(Explanation idf) {
             this.idf = idf;
         }
 
@@ -141,7 +124,6 @@ public class SimpleSimilarity extends Similarity {
          * it's not required. However, if it wants to participate in query normalization,
          * it can return a value here.
          */
-        @Override
         public float getValueForNormalization() {
             // do not use any query normalization
             return 1.0f;
@@ -153,7 +135,6 @@ public class SimpleSimilarity extends Similarity {
          * it's not required. However, it's usually a good idea to at least incorporate
          * the topLevelBoost (e.g. from an outer BooleanQuery) into its score.
          */
-        @Override
         public void normalize(float queryNorm, float boost) {
             this.boost = boost;
         }
