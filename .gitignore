@@ -1,4 +1,8 @@
 .idea
 *.iml
+*.ipr
+*.iws
+build
+.gradle
 target
 .DS_Score

@@ -55,7 +55,7 @@ curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_sea
 }'
 
 echo &&
-echo 'expecting the same score' &&
+echo 'expecting the same score, 1.0' &&
 curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
   "explain": false,
   "query": {
@@ -76,12 +76,16 @@ curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_sea
 }'
 
 echo &&
-echo 'expecting the same score' &&
+echo 'expecting the same score, 2.0' &&
 curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
-  "explain": true,
+  "explain": false,
   "query": {
-    "match": {
-      "simpleName": "bar"
+    "multi_match": {
+      "boost": 2,
+      "query": "bar",
+      "fields": [
+        "simpleName"
+      ]
     }
   }
 }'
