@@ -21,7 +21,6 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.common.logging.Loggers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,22 +46,24 @@ public class SimpleSimilarity extends Similarity {
 
     private static class SimpleScore extends SimWeight {
         private final Explanation score;
-        private float boost;
+        private final Explanation boost;
 
         SimpleScore(float boost, CollectionStatistics collectionStats, TermStatistics termStats) {
-            this.score = Explanation.match(1.0f, "term score");
-            this.boost = boost;
+            String description = String.format("simple score for (%s:%s)", collectionStats.field(), termStats.term().utf8ToString());
+            this.score = Explanation.match(1.0f, description);
+            this.boost = Explanation.match(boost, "boost");
         }
 
         SimpleScore(float boost, CollectionStatistics collectionStats, TermStatistics termStats[]) {
             float total = 0.0f;
             List<Explanation> scores = new ArrayList<>();
             for (final TermStatistics stat : termStats) {
-                scores.add(Explanation.match(1.0f, "term score"));
+                String description = String.format("simple score for (%s:%s)", collectionStats.field(), stat.term().utf8ToString());
+                scores.add(Explanation.match(1.0f, description));
                 total += 1.0f;
             }
-            this.score = Explanation.match(total, "total terms score, sum of:", scores);
-            this.boost = boost;
+            this.score = Explanation.match(total, "total score, sum of:", scores);
+            this.boost = Explanation.match(boost, "boost");
         }
     }
 
@@ -79,8 +80,7 @@ public class SimpleSimilarity extends Similarity {
         }
 
         public float score(int doc, float freq) {
-            Loggers.getLogger(this.getClass()).warn("score for doc " + doc);
-            return score.score.getValue() * score.boost;
+            return score.score.getValue() * score.boost.getValue();
         }
 
         public float computeSlopFactor(int distance) {
@@ -96,8 +96,7 @@ public class SimpleSimilarity extends Similarity {
         }
 
         private Explanation explainQuery(SimpleScore score) {
-            Explanation boost = Explanation.match(score.boost, "boost");
-            return Explanation.match(boost.getValue(),"query score, result of:", boost);
+            return Explanation.match(score.boost.getValue(),"query score, result of:", score.boost);
         }
 
         private Explanation explainField(SimpleScore score) {
@@ -107,10 +106,7 @@ public class SimpleSimilarity extends Similarity {
         private Explanation explainScore(int doc, Explanation freq, SimpleScore weight) {
             Explanation queryExpl = explainQuery(weight);
             Explanation fieldExpl = explainField(weight);
-            return Explanation.match(
-                    queryExpl.getValue() * fieldExpl.getValue(),
-                    "score, product of:",
-                    queryExpl, fieldExpl);
+            return Explanation.match(queryExpl.getValue() * fieldExpl.getValue(),"score, product of:", queryExpl, fieldExpl);
         }
     }
 }

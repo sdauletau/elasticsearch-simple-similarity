@@ -31,12 +31,11 @@ curl --header "Content-Type:application/json" -XPUT 'localhost:9200/test/type1/_
      }
    }
  }
-}'
+}' && echo
 
-echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/1" -d '{"name" : "foo bar baz", "simpleName" : "foo bar baz"}' && echo
-echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/2" -d '{"name" : "foo foo foo", "simpleName" : "foo foo foo"}' && echo
-echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/3" -d '{"name" : "bar baz", "simpleName" : "bar baz"}' && echo
-
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/1" -d '{"name" : "foo bar baz", "simpleName" : "foo bar baz"}'
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/2" -d '{"name" : "foo foo foo", "simpleName" : "foo foo foo"}'
+echo && curl --header "Content-Type:application/json" -s -XPUT "localhost:9200/test/type1/3" -d '{"name" : "bar baz", "simpleName" : "bar baz"}'
 echo && curl --header "Content-Type:application/json" -s -XPOST "http://localhost:9200/test/_refresh" && echo
 
 echo &&
@@ -75,7 +74,7 @@ curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_sea
 }'
 
 echo &&
-echo 'expecting the same score, 6.0' &&
+echo 'expecting the same score, 12.0' &&
 curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
   "explain": false,
   "query": {
@@ -83,7 +82,7 @@ curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_sea
       "boost": 3.0,
       "query": "bar baz",
       "fields": [
-        "simpleName"
+        "simpleName^2.0"
       ]
     }
   }
