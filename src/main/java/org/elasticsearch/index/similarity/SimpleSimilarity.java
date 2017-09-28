@@ -21,6 +21,7 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.common.logging.Loggers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,22 +39,22 @@ public class SimpleSimilarity extends Similarity {
 
     public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
         if (termStats.length == 1) {
-            return new SimpleSimilarityWeight(boost, collectionStats, termStats[0]);
+            return new SimpleScore(boost, collectionStats, termStats[0]);
         } else {
-            return new SimpleSimilarityWeight(boost, collectionStats, termStats);
+            return new SimpleScore(boost, collectionStats, termStats);
         }
     }
 
-    private static class SimpleSimilarityWeight extends SimWeight {
+    private static class SimpleScore extends SimWeight {
         private final Explanation score;
         private float boost;
 
-        SimpleSimilarityWeight(float boost, CollectionStatistics collectionStats, TermStatistics termStats) {
+        SimpleScore(float boost, CollectionStatistics collectionStats, TermStatistics termStats) {
             this.score = Explanation.match(1.0f, "term score");
             this.boost = boost;
         }
 
-        SimpleSimilarityWeight(float boost, CollectionStatistics collectionStats, TermStatistics termStats[]) {
+        SimpleScore(float boost, CollectionStatistics collectionStats, TermStatistics termStats[]) {
             float total = 0.0f;
             List<Explanation> scores = new ArrayList<>();
             for (final TermStatistics stat : termStats) {
@@ -66,19 +67,20 @@ public class SimpleSimilarity extends Similarity {
     }
 
     public final SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
-        SimpleSimilarityWeight simpleSimilarityWeight = (SimpleSimilarityWeight) weight;
-        return new SimpleSimilarityScorer(simpleSimilarityWeight);
+        SimpleScore score = (SimpleScore) weight;
+        return new SimpleScorer(score);
     }
 
-    private final class SimpleSimilarityScorer extends SimScorer {
-        private final SimpleSimilarityWeight weight;
+    private final class SimpleScorer extends SimScorer {
+        private final SimpleScore score;
 
-        SimpleSimilarityScorer(SimpleSimilarityWeight weight) throws IOException {
-            this.weight = weight;
+        SimpleScorer(SimpleScore score) throws IOException {
+            this.score = score;
         }
 
         public float score(int doc, float freq) {
-            return weight.boost;
+            Loggers.getLogger(this.getClass()).warn("score for doc " + doc);
+            return score.score.getValue() * score.boost;
         }
 
         public float computeSlopFactor(int distance) {
@@ -90,19 +92,19 @@ public class SimpleSimilarity extends Similarity {
         }
 
         public Explanation explain(int doc, Explanation freq) {
-            return explainScore(doc, freq, weight);
+            return explainScore(doc, freq, score);
         }
 
-        private Explanation explainQuery(SimpleSimilarityWeight weight) {
-            Explanation boost = Explanation.match(weight.boost, "boost");
+        private Explanation explainQuery(SimpleScore score) {
+            Explanation boost = Explanation.match(score.boost, "boost");
             return Explanation.match(boost.getValue(),"query score, result of:", boost);
         }
 
-        private Explanation explainField(SimpleSimilarityWeight weight) {
-            return Explanation.match(weight.score.getValue(),"field score, result of:", weight.score);
+        private Explanation explainField(SimpleScore score) {
+            return Explanation.match(score.score.getValue(),"field score, result of:", score.score);
         }
 
-        private Explanation explainScore(int doc, Explanation freq, SimpleSimilarityWeight weight) {
+        private Explanation explainScore(int doc, Explanation freq, SimpleScore weight) {
             Explanation queryExpl = explainQuery(weight);
             Explanation fieldExpl = explainField(weight);
             return Explanation.match(

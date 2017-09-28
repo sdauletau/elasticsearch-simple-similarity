@@ -11,13 +11,8 @@ curl --header "Content-Type:application/json" -s -XPUT "http://localhost:9200/te
      "number_of_replicas": 0,
      "similarity": {
        "default": {
-         "type": "classic"
+         "type": "simple-similarity"
        }
-     }
-   },
-   "similarity" : {
-    "simpleSimilarity": {
-       "type": "simple-similarity"
      }
    }
   }
@@ -28,11 +23,11 @@ curl --header "Content-Type:application/json" -XPUT 'localhost:9200/test/type1/_
  "type1": {
    "properties": {
      "simpleName": {
-       "type": "text",
-       "similarity": "simpleSimilarity"
+       "type": "text"
      },
      "name": {
-       "type": "text"
+       "type": "text",
+       "similarity": "classic"
      }
    }
  }
@@ -69,20 +64,24 @@ echo &&
 echo 'expecting different score' &&
 curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
  "query": {
-   "match": {
-     "name": "bar"
+   "multi_match": {
+     "boost": 3.0,
+     "query": "bar baz",
+     "fields": [
+       "name"
+     ]
    }
  }
 }'
 
 echo &&
-echo 'expecting the same score, 2.0' &&
+echo 'expecting the same score, 6.0' &&
 curl --header "Content-Type:application/json" -s "localhost:9200/test/type1/_search?pretty=true" -d '{
   "explain": false,
   "query": {
     "multi_match": {
-      "boost": 2,
-      "query": "bar",
+      "boost": 3.0,
+      "query": "bar baz",
       "fields": [
         "simpleName"
       ]
