@@ -8,7 +8,7 @@
 
 ## Build
 
-gradle clean assemble
+./gradlew clean assemble
 
 ## Install
 
