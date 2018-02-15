@@ -10,6 +10,8 @@
 
 ./gradlew clean assemble
 
+Note, that versions 6.2.x require Java 9.
+
 ## Install
 
 ./scripts/install-plugin.sh
