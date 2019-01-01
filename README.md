@@ -10,7 +10,7 @@
 
 ./gradlew clean assemble
 
-Note, that versions 6.2.x require Java 9.
+Note, that versions 6.5.x require Java 11.
 
 ## Install
 
