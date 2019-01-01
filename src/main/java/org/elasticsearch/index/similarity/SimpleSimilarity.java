@@ -21,6 +21,9 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.Version;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.script.ScriptService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +31,7 @@ import java.util.List;
 
 public class SimpleSimilarity extends Similarity {
 
-    public SimpleSimilarity() {
+    public SimpleSimilarity(Settings settings, Version version, ScriptService scriptService) {
     }
 
     public long computeNorm(FieldInvertState fieldInvertState) {

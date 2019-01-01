@@ -15,7 +15,7 @@
 package org.elasticsearch.plugin;
 
 import org.elasticsearch.index.IndexModule;
-import org.elasticsearch.index.similarity.SimpleSimilarityProvider;
+import org.elasticsearch.index.similarity.SimpleSimilarity;
 import org.elasticsearch.plugins.Plugin;
 
 public class SimpleSimilarityPlugin extends Plugin {
@@ -28,6 +28,6 @@ public class SimpleSimilarityPlugin extends Plugin {
     }
 
     public void onIndexModule(IndexModule indexModule) {
-        indexModule.addSimilarity("simple-similarity", SimpleSimilarityProvider::new);
+        indexModule.addSimilarity("simple-similarity", SimpleSimilarity::new);
     }
 }
